@@ -2,42 +2,87 @@ import streamlit as st
 import pandas as pd
 from io import StringIO
 
-st.set_page_config(page_title="Fiscale Jaarrekening AI", layout="centered")
-st.title("📊 AI-tool voor Fiscale Jaarrekening")
-st.write("Upload hieronder je boekhoudbestand (CSV). De AI berekent de fiscale correcties automatisch.")
+st.set_page_config(page_title="Fiscale Multi-Agent AI", layout="centered")
+st.title("🤖 Fiscale Jaarrekening AI met Multi-Agent Simulatie")
+st.write("Upload je boekhoudbestand (CSV) en zie hoe onze AI-agents samenwerken aan een fiscale jaarrekening.")
 
-uploaded_file = st.file_uploader("Upload je CSV-bestand", type=["csv"])
+uploaded_file = st.file_uploader("📌 Upload je CSV-bestand", type=["csv"])
 
 if uploaded_file is not None:
     try:
+        st.markdown("**📜 Inlees-agent:** 'Ik controleer het bestand op structuur en kolommen…'")
         df = pd.read_csv(uploaded_file)
 
         if not {"Grootboekrekening", "Bedrag (EUR)"}.issubset(df.columns):
             st.error("CSV moet de kolommen 'Grootboekrekening' en 'Bedrag (EUR)' bevatten.")
         else:
-            def corrigeer_fiscaal(rij):
-                grootboek = rij["Grootboekrekening"].lower()
-                bedrag = rij["Bedrag (EUR)"]
-                if "representatie" in grootboek or "relatiegeschenk" in grootboek:
-                    return bedrag * 0.8
+            # Verwijder oude outputkolommen indien aanwezig
+            for kolom in ["Herkenning", "Fiscaal aftrekbaar (EUR)", "Toelichting", "Correctie (EUR)"]:
+                if kolom in df.columns:
+                    df.drop(columns=kolom, inplace=True)
+
+            st.markdown("**🧠 Analyse-agent:** 'Ik analyseer de aard van de kostenposten…'")
+
+            def bepaal_posttype(omschrijving):
+                omschrijving = omschrijving.lower()
+                if "representatie" in omschrijving or "relatiegeschenk" in omschrijving:
+                    return "Representatiekosten"
+                elif "auto" in omschrijving or "lease" in omschrijving:
+                    return "Autokosten"
+                elif "huur" in omschrijving:
+                    return "Huisvestingskosten"
                 else:
-                    return bedrag
+                    return "Overige kosten"
 
-            df["Fiscaal aftrekbaar (EUR)"] = df.apply(corrigeer_fiscaal, axis=1)
-            df["Fiscale correctie (EUR)"] = df["Bedrag (EUR)"] - df["Fiscaal aftrekbaar (EUR)"]
+            df["Herkenning"] = df["Grootboekrekening"].apply(bepaal_posttype)
 
-            st.success("✅ Fiscale correcties toegepast!")
+            analyse_feedback = ""
+            for i, rij in df.iterrows():
+                analyse_feedback += f"- Rij {i+1}: '{rij['Grootboekrekening']}' geclassificeerd als **{rij['Herkenning']}**\n"
+            st.markdown(f"**🧠 Analyse-agent:**\n{analyse_feedback}")
+
+            st.markdown("**⚖️ Correctie-agent:** 'Ik pas de fiscale correcties toe en geef uitleg…'")
+
+            toelichtingen = []
+            correctie_feedback = ""
+
+            def corrigeer(rij):
+                bedrag = rij["Bedrag (EUR)"]
+                soort = rij["Herkenning"]
+                if soort == "Representatiekosten":
+                    toelichting = "80% aftrekbaar volgens fiscale regels"
+                    fiscaal = bedrag * 0.8
+                elif soort == "Autokosten":
+                    toelichting = "90% aftrekbaar voor zakelijke autokosten"
+                    fiscaal = bedrag * 0.9
+                else:
+                    toelichting = "Volledig aftrekbaar"
+                    fiscaal = bedrag
+                correctie_feedback_line = f"- Rij '{rij['Grootboekrekening']}': {toelichting}"
+                toelichtingen.append(toelichting)
+                return fiscaal, correctie_feedback_line
+
+            resultaten = df.apply(lambda rij: corrigeer(rij), axis=1)
+            df["Fiscaal aftrekbaar (EUR)"] = [r[0] for r in resultaten]
+            correctie_feedback = "\n".join([r[1] for r in resultaten])
+            df["Toelichting"] = toelichtingen
+            df["Correctie (EUR)"] = df["Bedrag (EUR)"] - df["Fiscaal aftrekbaar (EUR)"]
+
+            st.markdown(f"**⚖️ Correctie-agent:**\n{correctie_feedback}")
+
+            st.success("✅ Fiscale correcties voltooid!")
             st.dataframe(df)
 
             output = StringIO()
             df.to_csv(output, index=False)
             st.download_button(
-                label="📥 Download resultaat als CSV",
+                label="📅 Download fiscale jaarrekening (CSV)",
                 data=output.getvalue(),
-                file_name="fiscale_correctie_resultaat.csv",
+                file_name="fiscale_jaarrekening_agents.csv",
                 mime="text/csv"
             )
+
     except Exception as e:
         st.error(f"Fout bij verwerken van bestand: {e}")
 else:
-    st.info("Wacht op bestand...")
+    st.info("Wacht op bestand… De agents staan klaar om te starten.")
