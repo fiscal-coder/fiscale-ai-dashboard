@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 from io import StringIO
 
+# TEST-BLOK: dit zie je meteen bovenaan als de code geladen is
+st.markdown("## 🚨 TEST: mijn gewijzigde code wordt nu uitgevoerd! 🚨")
+
 def agent_block(title, color, feedback):
     st.markdown(
         f'''
