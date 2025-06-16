@@ -8,9 +8,21 @@ st.write("Upload je boekhoudbestand (CSV) en zie hoe onze AI-agents samenwerken 
 
 uploaded_file = st.file_uploader("📌 Upload je CSV-bestand", type=["csv"])
 
+def agent_block(title, color, feedback):
+    st.markdown(
+        f'''
+        <div style="background-color:{color}; padding:18px; border-radius:10px; border:2px solid #3bc984; margin-bottom:18px;">
+        <h3 style="color:#fff; margin-top:0;">{title}</h3>
+        <pre style="color:#fff; font-size:15px;">{feedback}</pre>
+        </div>
+        ''',
+        unsafe_allow_html=True,
+    )
+
 if uploaded_file is not None:
     try:
-        st.info("📜 Inlees-agent: Ik controleer het bestand op structuur en kolommen…")
+        # INLEES-AGENT
+        agent_block("📜 Inlees-agent", "#22523b", "Ik controleer het bestand op structuur en kolommen…")
         df = pd.read_csv(uploaded_file)
 
         if not {"Grootboekrekening", "Bedrag (EUR)"}.issubset(df.columns):
@@ -33,11 +45,13 @@ if uploaded_file is not None:
 
             df["Herkenning"] = df["Grootboekrekening"].apply(bepaal_posttype)
 
+            # ANALYSE-AGENT
             analyse_feedback = ""
             for i, rij in df.iterrows():
                 analyse_feedback += f"- Rij {i+1}: '{rij['Grootboekrekening']}' geclassificeerd als {rij['Herkenning']}\n"
-            st.info(f"🧠 Analyse-agent:\n{analyse_feedback}")
+            agent_block("🧠 Analyse-agent", "#3d405b", analyse_feedback)
 
+            # CORRECTIE-AGENT
             toelichtingen = []
             correctie_feedback_lines = []
 
@@ -62,7 +76,7 @@ if uploaded_file is not None:
             df["Correctie (EUR)"] = df["Bedrag (EUR)"] - df["Fiscaal aftrekbaar (EUR)"]
 
             correctie_feedback = "\n".join(correctie_feedback_lines)
-            st.info(f"⚖️ Correctie-agent:\n{correctie_feedback}")
+            agent_block("⚖️ Correctie-agent", "#a14a76", correctie_feedback)
 
             st.success("✅ Fiscale correcties voltooid!")
             st.dataframe(df)
