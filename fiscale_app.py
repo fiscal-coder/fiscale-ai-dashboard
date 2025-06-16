@@ -21,16 +21,19 @@ uploaded_file = st.file_uploader("📌 Upload je CSV-bestand", type=["csv"])
 
 if uploaded_file is not None:
     try:
+        # INLEES-AGENT blok
         agent_block("📜 Inlees-agent", "#22523b", "Ik controleer het bestand op structuur en kolommen…")
         df = pd.read_csv(uploaded_file)
 
         if not {"Grootboekrekening", "Bedrag (EUR)"}.issubset(df.columns):
             st.error("CSV moet de kolommen 'Grootboekrekening' en 'Bedrag (EUR)' bevatten.")
         else:
+            # Verwijder bestaande analysekolommen (voor herladen)
             for kolom in ["Herkenning", "Fiscaal aftrekbaar (EUR)", "Toelichting", "Correctie (EUR)"]:
                 if kolom in df.columns:
                     df.drop(columns=kolom, inplace=True)
 
+            # ANALYSE-AGENT blok
             def bepaal_posttype(omschrijving):
                 omschrijving = omschrijving.lower()
                 if "representatie" in omschrijving or "relatiegeschenk" in omschrijving:
@@ -49,9 +52,9 @@ if uploaded_file is not None:
                 analyse_feedback += f"- Rij {i+1}: '{rij['Grootboekrekening']}' geclassificeerd als {rij['Herkenning']}\n"
             agent_block("🧠 Analyse-agent", "#3d405b", analyse_feedback)
 
+            # CORRECTIE-AGENT blok
             toelichtingen = []
             correctie_feedback_lines = []
-
             def corrigeer(rij):
                 bedrag = rij["Bedrag (EUR)"]
                 soort = rij["Herkenning"]
@@ -75,6 +78,7 @@ if uploaded_file is not None:
             correctie_feedback = "\n".join(correctie_feedback_lines)
             agent_block("⚖️ Correctie-agent", "#a14a76", correctie_feedback)
 
+            # Nu pas de groene succesbalk en de tabel (na ALLE agent-blocks!)
             st.success("✅ Fiscale correcties voltooid!")
             st.dataframe(df)
 
