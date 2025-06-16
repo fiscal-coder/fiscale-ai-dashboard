@@ -10,18 +10,15 @@ uploaded_file = st.file_uploader("📌 Upload je CSV-bestand", type=["csv"])
 
 if uploaded_file is not None:
     try:
-        st.markdown("**📜 Inlees-agent:** 'Ik controleer het bestand op structuur en kolommen…'")
+        st.info("📜 Inlees-agent: Ik controleer het bestand op structuur en kolommen…")
         df = pd.read_csv(uploaded_file)
 
         if not {"Grootboekrekening", "Bedrag (EUR)"}.issubset(df.columns):
             st.error("CSV moet de kolommen 'Grootboekrekening' en 'Bedrag (EUR)' bevatten.")
         else:
-            # Verwijder oude outputkolommen indien aanwezig
             for kolom in ["Herkenning", "Fiscaal aftrekbaar (EUR)", "Toelichting", "Correctie (EUR)"]:
                 if kolom in df.columns:
                     df.drop(columns=kolom, inplace=True)
-
-            st.markdown("**🧠 Analyse-agent:** 'Ik analyseer de aard van de kostenposten…'")
 
             def bepaal_posttype(omschrijving):
                 omschrijving = omschrijving.lower()
@@ -38,13 +35,11 @@ if uploaded_file is not None:
 
             analyse_feedback = ""
             for i, rij in df.iterrows():
-                analyse_feedback += f"- Rij {i+1}: '{rij['Grootboekrekening']}' geclassificeerd als **{rij['Herkenning']}**\n"
-            st.markdown(f"**🧠 Analyse-agent:**\n{analyse_feedback}")
-
-            st.markdown("**⚖️ Correctie-agent:** 'Ik pas de fiscale correcties toe en geef uitleg…'")
+                analyse_feedback += f"- Rij {i+1}: '{rij['Grootboekrekening']}' geclassificeerd als {rij['Herkenning']}\n"
+            st.info(f"🧠 Analyse-agent:\n{analyse_feedback}")
 
             toelichtingen = []
-            correctie_feedback = ""
+            correctie_feedback_lines = []
 
             def corrigeer(rij):
                 bedrag = rij["Bedrag (EUR)"]
@@ -58,17 +53,16 @@ if uploaded_file is not None:
                 else:
                     toelichting = "Volledig aftrekbaar"
                     fiscaal = bedrag
-                correctie_feedback_line = f"- Rij '{rij['Grootboekrekening']}': {toelichting}"
+                correctie_feedback_lines.append(f"- Rij '{rij['Grootboekrekening']}': {toelichting}")
                 toelichtingen.append(toelichting)
-                return fiscaal, correctie_feedback_line
+                return fiscaal
 
-            resultaten = df.apply(lambda rij: corrigeer(rij), axis=1)
-            df["Fiscaal aftrekbaar (EUR)"] = [r[0] for r in resultaten]
-            correctie_feedback = "\n".join([r[1] for r in resultaten])
+            df["Fiscaal aftrekbaar (EUR)"] = df.apply(lambda rij: corrigeer(rij), axis=1)
             df["Toelichting"] = toelichtingen
             df["Correctie (EUR)"] = df["Bedrag (EUR)"] - df["Fiscaal aftrekbaar (EUR)"]
 
-            st.markdown(f"**⚖️ Correctie-agent:**\n{correctie_feedback}")
+            correctie_feedback = "\n".join(correctie_feedback_lines)
+            st.info(f"⚖️ Correctie-agent:\n{correctie_feedback}")
 
             st.success("✅ Fiscale correcties voltooid!")
             st.dataframe(df)
