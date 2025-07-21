@@ -1,0 +1,30 @@
+# fiscale_vragen.py
+
+fiscale_vragen = [
+    "Is er een fiscale eenheid voor de vennootschapsbelasting gevormd (artikel 15 Wet Vpb)?",
+    "Zijn er in het afgelopen boekjaar dochters toegevoegd aan of uit de fiscale eenheid getreden?",
+    "Is er verliesverrekening aangevraagd voor dochters na ontvoeging (art. 15af lid 3 Wet Vpb)?",
+    "Zijn er dochters geliquideerd of failliet gegaan in dit boekjaar?",
+    "Is er een verzoek ingediend tot voortwenteling van rente na ontvoeging (art. 15ahb Wet Vpb)?",
+    "Is er sprake van een juridische splitsing of fusie van groepsmaatschappijen?",
+    "Zijn er balansen, vorderingen of schulden na ontvoeging doorgeschoven naar een dochtermaatschappij?",
+    "Is het aandelenbelang of de uiteindelijke zeggenschap veranderd in het afgelopen jaar?",
+    "Heeft de onderneming gebruikgemaakt van de tegenbewijsregeling artikel 10a Wet Vpb (renteaftrekbeperking)?",
+    "Is sprake van een 10a-schuld (rente aan verbonden partij)?",
+    "Is er een compensatieheffing opgelegd of te verwachten op betaalde rente over 10a-schulden?",
+    "Is de onderneming een fiscale beleggingsinstelling of verzekeraar?",
+    "Zijn er pensioenen afgekocht, omgezet of afgefinancierd?",
+    "Zijn er vorderingen of schulden overgedragen binnen de groep?",
+    "Is er sprake van een concernfinancieringsstructuur (art. 20a, 13b Vpb)?",
+    "Is er gebruikgemaakt van innovatiebox of andere fiscale faciliteiten?",
+    "Zijn er transacties geweest met een buitenlandse entiteit binnen de groep?",
+    "Zijn er wijzigingen geweest in de accounting policies?",
+    "Is de bedrijfsactiviteit wezenlijk veranderd?",
+    "Zijn er bijzondere waardedalingen, afboekingen of desinvesteringen geweest?",
+    "Is er sprake van een transparante (belastingplichtige) samenwerking (VOF/CV/etc.)?",
+    "Is er een Special Purpose Asset (SPA) of andere afgescheiden vermogensstructuur?",
+    "Is er aanvullende ATAD2-documentatieplicht (hybride mismatches of dubbele aftrek)?",
+    "Zijn er betalingen aan/van hybride entiteiten, of situaties van dubbele niet-heffing?",
+    "Heeft de onderneming te maken met DB/2015/462M (documentatieplicht bij herstructureringen/intangibles)?",
+    # 
+]
