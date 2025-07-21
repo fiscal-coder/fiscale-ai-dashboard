@@ -1,9 +1,12 @@
 import streamlit as st
 import pandas as pd
 from io import StringIO
+from fiscale_vragen import fiscale_vragen  # <-- Zorg dat dit bestand in je repo staat!
 
-# TEST-BLOK: dit zie je meteen bovenaan als de code geladen is
-st.markdown("## 🚨 TEST: mijn gewijzigde code wordt nu uitgevoerd! 🚨")
+# --- BEGIN APP ---
+st.set_page_config(page_title="Fiscale Multi-Agent AI", layout="centered")
+st.title("🤖 Fiscale Jaarrekening AI met Multi-Agent Simulatie")
+st.write("Upload je boekhoudbestand (CSV) en zie hoe onze AI-agents samenwerken aan een fiscale jaarrekening.")
 
 def agent_block(title, color, feedback):
     st.markdown(
@@ -16,27 +19,20 @@ def agent_block(title, color, feedback):
         unsafe_allow_html=True,
     )
 
-st.set_page_config(page_title="Fiscale Multi-Agent AI", layout="centered")
-st.title("🤖 Fiscale Jaarrekening AI met Multi-Agent Simulatie")
-st.write("Upload je boekhoudbestand (CSV) en zie hoe onze AI-agents samenwerken aan een fiscale jaarrekening.")
-
 uploaded_file = st.file_uploader("📌 Upload je CSV-bestand", type=["csv"])
 
 if uploaded_file is not None:
     try:
-        # INLEES-AGENT blok
         agent_block("📜 Inlees-agent", "#22523b", "Ik controleer het bestand op structuur en kolommen…")
         df = pd.read_csv(uploaded_file)
 
         if not {"Grootboekrekening", "Bedrag (EUR)"}.issubset(df.columns):
             st.error("CSV moet de kolommen 'Grootboekrekening' en 'Bedrag (EUR)' bevatten.")
         else:
-            # Verwijder bestaande analysekolommen (voor herladen)
             for kolom in ["Herkenning", "Fiscaal aftrekbaar (EUR)", "Toelichting", "Correctie (EUR)"]:
                 if kolom in df.columns:
                     df.drop(columns=kolom, inplace=True)
 
-            # ANALYSE-AGENT blok
             def bepaal_posttype(omschrijving):
                 omschrijving = omschrijving.lower()
                 if "representatie" in omschrijving or "relatiegeschenk" in omschrijving:
@@ -49,13 +45,11 @@ if uploaded_file is not None:
                     return "Overige kosten"
 
             df["Herkenning"] = df["Grootboekrekening"].apply(bepaal_posttype)
-
             analyse_feedback = ""
             for i, rij in df.iterrows():
                 analyse_feedback += f"- Rij {i+1}: '{rij['Grootboekrekening']}' geclassificeerd als {rij['Herkenning']}\n"
             agent_block("🧠 Analyse-agent", "#3d405b", analyse_feedback)
 
-            # CORRECTIE-AGENT blok
             toelichtingen = []
             correctie_feedback_lines = []
             def corrigeer(rij):
@@ -81,7 +75,6 @@ if uploaded_file is not None:
             correctie_feedback = "\n".join(correctie_feedback_lines)
             agent_block("⚖️ Correctie-agent", "#a14a76", correctie_feedback)
 
-            # Nu pas de groene succesbalk en de tabel (na ALLE agent-blocks!)
             st.success("✅ Fiscale correcties voltooid!")
             st.dataframe(df)
 
@@ -98,3 +91,21 @@ if uploaded_file is not None:
         st.error(f"Fout bij verwerken van bestand: {e}")
 else:
     st.info("Wacht op bestand… De agents staan klaar om te starten.")
+
+# -------------------- VRAGENLIJST AGENT -----------------------
+st.markdown("---")
+st.header("🕵️‍♂️ Fiscale vragenlijst (AI-agent)")
+
+st.write(
+    "Beantwoord deze aanvullende fiscale vragen voor een volledige fiscale controle en risico-analyse. "
+    "Deze vragen zijn gebaseerd op actuele wetgeving, waaronder ATAD2 en relevante VPB-regels."
+)
+
+antwoorden = {}
+for vraag in fiscale_vragen:
+    antwoord = st.text_area(vraag, key=f"vraag_{vraag[:20]}")
+    antwoorden[vraag] = antwoord
+
+if st.button("📝 Sla fiscale vragen en antwoorden op"):
+    st.success("Je antwoorden zijn opgeslagen! (Let op: alleen zichtbaar in deze sessie)")
+    st.write(antwoorden)
